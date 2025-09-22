@@ -19,8 +19,60 @@
   }
 }
 
+/* Custom animations for modal components */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.section-container {
+  @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+h1 {
+  @apply text-3xl md:text-5xl;
+}
+
+h2 {
+  @apply text-2xl md:text-3xl;
+}
+
+h3 {
+  @apply text-xl font-bold tracking-tight leading-6;
+}
+
+.styleInput {
+  @apply w-full cursor-default overflow-hidden rounded border border-slate-400 bg-white text-left shadow-sm focus:outline-gray-500 sm:text-sm py-2 px-3;
+}
+
+.styleLabel {
+  @apply block text-sm font-medium mb-1;
 }
