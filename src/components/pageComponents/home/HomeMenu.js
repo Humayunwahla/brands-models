@@ -21,7 +21,6 @@ export default function HomeMenu() {
     setModels(getModels());
   }, []);
 
-  // Refresh functions (called by forms and lists after data changes)
   const refreshBrands = () => {
     setBrands(getBrands());
   };

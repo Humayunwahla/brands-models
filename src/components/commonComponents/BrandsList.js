@@ -27,7 +27,7 @@ export default function BrandsList({ onClose, onUpdate }) {
   const handleDelete = async (brand) => {
     if (
       window.confirm(
-        `Are you sure you want to delete "${brand.name}"? This will also delete all associated models.`
+        `Are you sure you want to delete &quot;${brand.name}&quot;? This will also delete all associated models.`
       )
     ) {
       setLoading(true);
@@ -126,7 +126,8 @@ export default function BrandsList({ onClose, onUpdate }) {
                 No brands yet
               </h3>
               <p className="text-gray-600">
-                Start by adding your first brand using the "Add Brands" card.
+                Start by adding your first brand using the &quot;Add
+                Brands&quot; card.
               </p>
             </div>
           ) : (

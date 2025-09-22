@@ -45,7 +45,7 @@ export default function ModelsList({ onClose, onUpdate }) {
 
     if (
       window.confirm(
-        `Are you sure you want to delete "${model.name}" from ${brandName}?`
+        `Are you sure you want to delete &quot;${model.name}&quot; from ${brandName}?`
       )
     ) {
       setLoading(true);
@@ -145,7 +145,8 @@ export default function ModelsList({ onClose, onUpdate }) {
                 No models yet
               </h3>
               <p className="text-gray-600">
-                Start by adding your first model using the "Add Models" card.
+                Start by adding your first model using the &quot;Add
+                Models&quot; card.
               </p>
             </div>
           ) : (
