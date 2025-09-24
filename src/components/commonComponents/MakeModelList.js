@@ -2,35 +2,39 @@
 import { useState, useEffect } from "react";
 import { X, Car, Building2 } from "lucide-react";
 import { deleteMakeModel } from "../../lib/dataManager";
+import Image from "next/image";
 
 export default function MakeModelList({ onClose }) {
   const [models, setModels] = useState([]);
   const [makes, setMakes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const handleDelete = async (model) => {
-    const modelKey = model.modelId || `${model.name}-${model.makeId}`;
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${model.name}" from ${getMakeName(
-          model.makeId
-        )}?`
-      )
-    ) {
-      setLoading(true);
-      setDeletingId(modelKey);
-      try {
-        const updatedModels = await deleteMakeModel(model.modelId);
-        setModels(updatedModels);
-      } catch (error) {
-        console.error("Error deleting model:", error);
-        alert("Failed to delete model. Please try again.");
-      } finally {
-        setLoading(false);
-        setDeletingId(null);
-      }
+  const handleDelete = (model) => {
+    setConfirmDelete(model);
+  };
+
+  const confirmDeleteYes = async () => {
+    if (!confirmDelete) return;
+    const modelKey =
+      confirmDelete.modelId || `${confirmDelete.name}-${confirmDelete.makeId}`;
+    setLoading(true);
+    setDeletingId(modelKey);
+    try {
+      const updatedModels = await deleteMakeModel(confirmDelete.modelId);
+      setModels(updatedModels);
+    } catch (error) {
+      console.error("Error deleting model:", error);
+    } finally {
+      setLoading(false);
+      setDeletingId(null);
+      setConfirmDelete(null);
     }
+  };
+
+  const confirmDeleteNo = () => {
+    setConfirmDelete(null);
   };
 
   useEffect(() => {
@@ -104,8 +108,8 @@ export default function MakeModelList({ onClose }) {
                 No models yet
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                Start by adding your first model using the "Add Make Models"
-                card.
+                Start by adding your first model using the &quot;Add Make
+                Models&quot; card.
               </p>
             </div>
           ) : (
@@ -137,10 +141,13 @@ export default function MakeModelList({ onClose }) {
                         >
                           <div className="flex-1 flex items-center space-x-2 sm:space-x-3 w-full">
                             {model.displayImg && (
-                              <img
+                              <Image
                                 src={model.displayImg}
                                 alt={model.name}
+                                width={40}
+                                height={40}
                                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded"
+                                unoptimized
                               />
                             )}
                             <div>
@@ -189,6 +196,36 @@ export default function MakeModelList({ onClose }) {
           </button>
         </div>
       </div>
+      {/* Custom confirmation popup */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-xs w-full text-center">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Confirm Delete
+            </h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Are you sure you want to delete &quot;{confirmDelete.name}&quot;
+              from {getMakeName(confirmDelete.makeId)}?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmDeleteYes}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+                disabled={loading}
+              >
+                Yes
+              </button>
+              <button
+                onClick={confirmDeleteNo}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+                disabled={loading}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

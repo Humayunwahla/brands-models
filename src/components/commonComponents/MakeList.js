@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { X, Building2, Trash2 } from "lucide-react";
 import { deleteMake } from "../../lib/dataManager";
+import Image from "next/image";
 
 export default function MakeList({ onClose }) {
   const [makes, setMakes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
     const loadMakes = async () => {
@@ -24,25 +26,28 @@ export default function MakeList({ onClose }) {
   }, []);
 
   // Delete make
-  const handleDelete = async (make) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${make.name}"? This will also delete all associated models.`
-      )
-    ) {
-      setLoading(true);
-      setDeletingId(make.makeId);
-      try {
-        const updatedMakes = await deleteMake(make.makeId);
-        setMakes(updatedMakes);
-      } catch (error) {
-        console.error("Error deleting make:", error);
-        alert("Failed to delete make. Please try again.");
-      } finally {
-        setLoading(false);
-        setDeletingId(null);
-      }
+  const handleDelete = (make) => {
+    setConfirmDelete(make);
+  };
+
+  const confirmDeleteYes = async () => {
+    if (!confirmDelete) return;
+    setLoading(true);
+    setDeletingId(confirmDelete.makeId);
+    try {
+      const updatedMakes = await deleteMake(confirmDelete.makeId);
+      setMakes(updatedMakes);
+    } catch (error) {
+      console.error("Error deleting make:", error);
+    } finally {
+      setLoading(false);
+      setDeletingId(null);
+      setConfirmDelete(null);
     }
+  };
+
+  const confirmDeleteNo = () => {
+    setConfirmDelete(null);
   };
 
   return (
@@ -80,7 +85,8 @@ export default function MakeList({ onClose }) {
                 No makes yet
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
-                Start by adding your first make using the "Add Makes" card.
+                Start by adding your first make using the &quot;Add Makes&quot;
+                card.
               </p>
             </div>
           ) : (
@@ -92,10 +98,13 @@ export default function MakeList({ onClose }) {
                 >
                   <div className="flex-1 flex items-center space-x-2 sm:space-x-3 w-full">
                     {make.logo && (
-                      <img
+                      <Image
                         src={make.logo}
                         alt={make.name}
+                        width={40}
+                        height={40}
                         className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded"
+                        unoptimized
                       />
                     )}
                     <div>
@@ -136,6 +145,36 @@ export default function MakeList({ onClose }) {
           </button>
         </div>
       </div>
+      {/* Custom confirmation popup */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-xs w-full text-center">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Confirm Delete
+            </h3>
+            <p className="text-sm text-gray-700 mb-4">
+              Are you sure you want to delete &quot;{confirmDelete.name}&quot;?
+              This will also delete all associated models.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmDeleteYes}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+                disabled={loading}
+              >
+                Yes
+              </button>
+              <button
+                onClick={confirmDeleteNo}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
+                disabled={loading}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
