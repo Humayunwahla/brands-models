@@ -1,55 +1,47 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Building2, Car, Zap } from "lucide-react";
-import AddBrandForm from "../../commonComponents/AddBrandForm";
-import AddModelForm from "../../commonComponents/AddModelForm";
-import BrandsList from "../../commonComponents/BrandsList";
-import ModelsList from "../../commonComponents/ModelsList";
-import { getBrands, getModels } from "../../../lib/dataManager";
+import AddMakeForm from "../../commonComponents/AddMakeForm";
+import AddMakeModelForm from "../../commonComponents/AddMakeModelForm";
+import MakeList from "../../commonComponents/MakeList";
+import MakeModelList from "../../commonComponents/MakeModelList";
 
 export default function HomeMenu() {
-  const [showBrandForm, setShowBrandForm] = useState(false);
-  const [showModelForm, setShowModelForm] = useState(false);
-  const [showBrandsList, setShowBrandsList] = useState(false);
-  const [showModelsList, setShowModelsList] = useState(false);
-  const [brands, setBrands] = useState([]);
-  const [models, setModels] = useState([]);
+  const [showMakeForm, setShowMakeForm] = useState(false);
+  const [showMakeModelForm, setShowMakeModelForm] = useState(false);
+  const [showMakeList, setShowMakeList] = useState(false);
+  const [showMakeModelList, setShowMakeModelList] = useState(false);
+  const [makesCount, setMakesCount] = useState(0);
+  const [makeModelsCount, setMakeModelsCount] = useState(0);
 
-  // Load initial data from localStorage
+  // Fetch makes and make models count
+  const fetchCounts = async () => {
+    try {
+      const makesRes = await fetch("/api/makes");
+      const makes = makesRes.ok ? await makesRes.json() : [];
+      setMakesCount(makes.length);
+      const modelsRes = await fetch("/api/models");
+      const makeModels = modelsRes.ok ? await modelsRes.json() : [];
+      setMakeModelsCount(makeModels.length);
+    } catch {
+      setMakesCount(0);
+      setMakeModelsCount(0);
+    }
+  };
+
   useEffect(() => {
-    setBrands(getBrands());
-    setModels(getModels());
+    fetchCounts();
   }, []);
 
-  const refreshBrands = () => {
-    setBrands(getBrands());
+  const handleMakeCardClick = () => setShowMakeForm(true);
+  const handleMakeModelCardClick = () => setShowMakeModelForm(true);
+
+  const handleMakeStatsClick = () => {
+    setShowMakeList(true);
   };
 
-  const refreshModels = () => {
-    setModels(getModels());
-  };
-
-  const refreshAllData = () => {
-    setBrands(getBrands());
-    setModels(getModels());
-  };
-
-  // Handle card clicks
-  const handleBrandCardClick = () => {
-    setShowBrandForm(true);
-  };
-
-  const handleModelCardClick = () => {
-    setShowModelForm(true);
-  };
-
-  // Handle statistics clicks
-  const handleBrandsStatsClick = () => {
-    setShowBrandsList(true);
-  };
-
-  const handleModelsStatsClick = () => {
-    setShowModelsList(true);
+  const handleMakeModelStatsClick = () => {
+    setShowMakeModelList(true);
   };
 
   return (
@@ -71,81 +63,75 @@ export default function HomeMenu() {
             </p>
 
             {/* Statistics */}
-            {(brands.length > 0 || models.length > 0) && (
-              <div className="flex items-center justify-center space-x-6 mt-4 text-sm text-gray-500">
-                <div
-                  className="flex items-center space-x-1 cursor-pointer hover:text-blue-600 transition-colors duration-200 hover:bg-blue-50 px-2 py-1 rounded-lg"
-                  onClick={handleBrandsStatsClick}
-                  title="Click to view brands list"
-                >
-                  <Building2 className="w-4 h-4" />
-                  <span>
-                    {brands.length} Brand{brands.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div
-                  className="flex items-center space-x-1 cursor-pointer hover:text-purple-600 transition-colors duration-200 hover:bg-purple-50 px-2 py-1 rounded-lg"
-                  onClick={handleModelsStatsClick}
-                  title="Click to view models list"
-                >
-                  <Car className="w-4 h-4" />
-                  <span>
-                    {models.length} Model{models.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
+
+            <div className="flex items-center justify-center space-x-6 mt-4 text-sm text-gray-500">
+              <div
+                className="flex items-center space-x-1 cursor-pointer hover:text-green-600 transition-colors duration-200 hover:bg-green-50 px-2 py-1 rounded-lg"
+                onClick={handleMakeStatsClick}
+                title="Click to view makes list"
+              >
+                <Building2 className="w-4 h-4" />
+                <span>
+                  {makesCount} Make{makesCount !== 1 ? "s" : ""}
+                </span>
               </div>
-            )}
+              <div
+                className="flex items-center space-x-1 cursor-pointer hover:text-orange-600 transition-colors duration-200 hover:bg-orange-50 px-2 py-1 rounded-lg"
+                onClick={handleMakeModelStatsClick}
+                title="Click to view make models list"
+              >
+                <Car className="w-4 h-4" />
+                <span>
+                  {makeModelsCount} Make Model
+                  {makeModelsCount !== 1 ? "s" : ""}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Cards Container */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-6 lg:gap-8 xl:gap-10 max-w-xs sm:max-w-sm md:max-w-xl lg:max-w-3xl xl:max-w-4xl mx-auto">
-            {/* Add Brands Card */}
+            {/* Add Makes Card */}
             <div
               className="group relative w-full"
-              onClick={handleBrandCardClick}
+              onClick={handleMakeCardClick}
             >
-              <div className="relative bg-slate-100 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 shadow-lg group-hover:shadow-2xl transform transition-all duration-300 group-hover:scale-101 lg:group-hover:scale-101 cursor-pointer border border-slate-200 group-hover:border-blue-200/50">
-                {/* Icon Container */}
-                <div className="flex justify-center mb-3 sm:mb-4 md:mb-5">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-200 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-white drop-shadow-sm" />
+              <div className="relative bg-slate-100 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 shadow-lg group-hover:shadow-2xl transform transition-all duration-300 group-hover:scale-101 cursor-pointer border border-slate-200 group-hover:border-green-200/50">
+                <div className="flex justify-center mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-green-200 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                    <Building2 className="w-5 h-5 text-white drop-shadow-sm" />
                   </div>
                 </div>
-
-                {/* Content */}
                 <div className="text-center">
-                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-2 md:mb-3 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
-                    Add Brands
+                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors duration-300 leading-tight">
+                    Add Makes
                   </h3>
-                  <p className="text-gray-600 text-xs sm:text-xs md:text-sm lg:text-base mb-3 sm:mb-4 md:mb-5 leading-relaxed px-2 sm:px-0">
-                    Create and manage powersports brands. Add new manufacturers,
-                    update existing ones, and organize your brand portfolio.
+                  <p className="text-gray-600 text-xs md:text-sm lg:text-base mb-3 leading-relaxed px-2">
+                    Create and manage makes. Add new makes, update existing
+                    ones, and organize your make portfolio.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Add Models Card */}
+            {/* Add Makes Models Card */}
             <div
               className="group relative w-full"
-              onClick={handleModelCardClick}
+              onClick={handleMakeModelCardClick}
             >
-              <div className="relative bg-slate-100 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 shadow-lg group-hover:shadow-2xl transform transition-all duration-300 group-hover:scale-101 lg:group-hover:scale-101 cursor-pointer border border-slate-200 group-hover:border-purple-200/50">
-                {/* Icon Container */}
-                <div className="flex justify-center mb-3 sm:mb-4 md:mb-5">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-purple-200 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                    <Car className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-white drop-shadow-sm" />
+              <div className="relative bg-slate-100 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 shadow-lg group-hover:shadow-2xl transform transition-all duration-300 group-hover:scale-101 cursor-pointer border border-slate-200 group-hover:border-orange-200/50">
+                <div className="flex justify-center mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-orange-200 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                    <Car className="w-5 h-5 text-white drop-shadow-sm" />
                   </div>
                 </div>
-
-                {/* Content */}
                 <div className="text-center">
-                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-2 md:mb-3 group-hover:text-purple-600 transition-colors duration-300 leading-tight">
-                    Add Models
+                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors duration-300 leading-tight">
+                    Add Makes Models
                   </h3>
-                  <p className="text-gray-600 text-xs sm:text-xs md:text-sm lg:text-base mb-3 sm:mb-4 md:mb-5 leading-relaxed px-2 sm:px-0">
-                    Create and manage vehicle models. Add specifications,
-                    features, and organize models under their respective brands.
+                  <p className="text-gray-600 text-xs md:text-sm lg:text-base mb-3 leading-relaxed px-2">
+                    Create and manage models for makes. Add new models, update
+                    existing ones, and organize your make models.
                   </p>
                 </div>
               </div>
@@ -155,38 +141,49 @@ export default function HomeMenu() {
       </div>
 
       {/* Forms */}
-      {showBrandForm && (
-        <AddBrandForm
-          onCancel={() => setShowBrandForm(false)}
+      {showMakeForm && (
+        <AddMakeForm
+          onCancel={() => {
+            setShowMakeForm(false);
+            fetchCounts();
+          }}
           onSuccess={() => {
-            setShowBrandForm(false);
-            refreshBrands();
+            setShowMakeForm(false);
+            fetchCounts();
           }}
         />
       )}
 
-      {showModelForm && (
-        <AddModelForm
-          onCancel={() => setShowModelForm(false)}
+      {showMakeModelForm && (
+        <AddMakeModelForm
+          onCancel={() => {
+            setShowMakeModelForm(false);
+            fetchCounts();
+          }}
           onSuccess={() => {
-            setShowModelForm(false);
-            refreshModels();
+            setShowMakeModelForm(false);
+            fetchCounts();
           }}
         />
       )}
 
       {/* Lists */}
-      {showBrandsList && (
-        <BrandsList
-          onClose={() => setShowBrandsList(false)}
-          onDataChange={refreshAllData}
+
+      {showMakeList && (
+        <MakeList
+          onClose={() => {
+            setShowMakeList(false);
+            fetchCounts();
+          }}
         />
       )}
 
-      {showModelsList && (
-        <ModelsList
-          onClose={() => setShowModelsList(false)}
-          onDataChange={refreshModels}
+      {showMakeModelList && (
+        <MakeModelList
+          onClose={() => {
+            setShowMakeModelList(false);
+            fetchCounts();
+          }}
         />
       )}
     </section>

@@ -1,4 +1,61 @@
 /**
+ * Delete a make via API and also delete associated make models
+ * @param {string} makeId - Make ID
+ * @returns {Promise<Array>} - Updated makes array
+ */
+export const deleteMake = async (makeId) => {
+  try {
+    // Get all makes
+    const makesRes = await fetch("/api/makes");
+    const makes = makesRes.ok ? await makesRes.json() : [];
+    const updatedMakes = makes.filter((make) => make.makeId !== makeId);
+    // Save updated makes
+    await fetch("/api/makes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedMakes),
+    });
+    // Get all make models
+    const modelsRes = await fetch("/api/models");
+    const models = modelsRes.ok ? await modelsRes.json() : [];
+    const updatedModels = models.filter((model) => model.makeId !== makeId);
+    // Save updated models
+    await fetch("/api/models", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedModels),
+    });
+    return updatedMakes;
+  } catch (error) {
+    console.error("Error deleting make:", error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a make model via API
+ * @param {string} modelId - Model ID
+ * @returns {Promise<Array>} - Updated models array
+ */
+export const deleteMakeModel = async (modelId) => {
+  try {
+    // Get all make models
+    const modelsRes = await fetch("/api/models");
+    const models = modelsRes.ok ? await modelsRes.json() : [];
+    const updatedModels = models.filter((model) => model.modelId !== modelId);
+    // Save updated models
+    await fetch("/api/models", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedModels),
+    });
+    return updatedModels;
+  } catch (error) {
+    console.error("Error deleting make model:", error);
+    throw error;
+  }
+};
+/**
  * Data Management Utilities
  * Handles local storage operations for brands and models
  */
@@ -67,274 +124,78 @@ export const downloadAsJSON = (data, filename) => {
   }
 };
 
-// ===== BRAND OPERATIONS (localStorage only) =====
+// ===== MAKES OPERATIONS (API) =====
 
 /**
- * Get all brands from localStorage
- * @returns {Array} - Array of brand objects
+ * Get all makes from API
+ * @returns {Promise<Array>} - Array of make objects
  */
-export const getBrands = () => {
-  return getFromStorage(STORAGE_KEYS.BRANDS);
-};
-
-/**
- * Add a new brand to localStorage
- * @param {Object} brand - Brand object {id, name, createdAt, updatedAt}
- * @returns {Array} - Updated brands array
- */
-export const addBrand = (brand) => {
+export const getMakes = async () => {
   try {
-    const existingBrands = getBrands();
-
-    // Check if brand already exists
-    const exists = existingBrands.some(
-      (existing) => existing.name.toLowerCase() === brand.name.toLowerCase()
-    );
-
-    if (exists) {
-      throw new Error("Brand already exists");
-    }
-
-    const updatedBrands = [...existingBrands, brand];
-    saveToStorage(STORAGE_KEYS.BRANDS, updatedBrands);
-
-    return updatedBrands;
+    const res = await fetch("/api/makes");
+    if (!res.ok) throw new Error("Failed to fetch makes");
+    return await res.json();
   } catch (error) {
-    console.error("Error adding brand:", error);
-    throw error;
+    console.error("Error fetching makes:", error);
+    return [];
   }
 };
 
 /**
- * Update an existing brand in localStorage
- * @param {string} brandId - Brand ID
- * @param {Object} updates - Updates to apply
- * @returns {Array} - Updated brands array
+ * Add a new make via API
+ * @param {Object} make - { makeId, name, logo }
+ * @returns {Promise<Object>} - Newly created make
  */
-export const updateBrand = (brandId, updates) => {
+export const addMake = async (make) => {
   try {
-    const existingBrands = getBrands();
-    const brandIndex = existingBrands.findIndex(
-      (brand) => brand.id === brandId
-    );
-
-    if (brandIndex === -1) {
-      throw new Error("Brand not found");
-    }
-
-    const updatedBrands = [...existingBrands];
-    updatedBrands[brandIndex] = {
-      ...updatedBrands[brandIndex],
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-
-    saveToStorage(STORAGE_KEYS.BRANDS, updatedBrands);
-
-    return updatedBrands;
+    const res = await fetch("/api/makes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(make),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to add make");
+    return data;
   } catch (error) {
-    console.error("Error updating brand:", error);
+    console.error("Error adding make:", error);
     throw error;
   }
 };
 
+// ===== MAKE MODELS OPERATIONS (API) =====
+
 /**
- * Delete a brand from localStorage
- * @param {string} brandId - Brand ID
- * @returns {Array} - Updated brands array
+ * Get all models from API
+ * @returns {Promise<Array>} - Array of model objects
  */
-export const deleteBrand = (brandId) => {
+export const getMakeModels = async () => {
   try {
-    const existingBrands = getBrands();
-    const updatedBrands = existingBrands.filter(
-      (brand) => brand.id !== brandId
-    );
-
-    saveToStorage(STORAGE_KEYS.BRANDS, updatedBrands);
-
-    // Also remove models associated with this brand
-    const existingModels = getModels();
-    const updatedModels = existingModels.filter(
-      (model) => model.brandId !== brandId
-    );
-    saveToStorage(STORAGE_KEYS.MODELS, updatedModels);
-
-    return updatedBrands;
+    const res = await fetch("/api/models");
+    if (!res.ok) throw new Error("Failed to fetch models");
+    return await res.json();
   } catch (error) {
-    console.error("Error deleting brand:", error);
-    throw error;
+    console.error("Error fetching models:", error);
+    return [];
   }
 };
 
-// ===== MODEL OPERATIONS (localStorage only) =====
-
 /**
- * Get all models from localStorage
- * @returns {Array} - Array of model objects
+ * Add a new make model via API
+ * @param {Object} model - { modelId, name, makeId, displayImg }
+ * @returns {Promise<Object>} - Newly created model
  */
-export const getModels = () => {
-  return getFromStorage(STORAGE_KEYS.MODELS);
-};
-
-/**
- * Get models by brand from localStorage
- * @param {string} brandId - Brand ID
- * @returns {Array} - Array of models for the brand
- */
-export const getModelsByBrand = (brandId) => {
-  const models = getModels();
-  return models.filter((model) => model.brandId === brandId);
-};
-
-/**
- * Add a new model to localStorage
- * @param {Object} model - Model object {id, name, brandId, brandName, createdAt, updatedAt}
- * @returns {Array} - Updated models array
- */
-export const addModel = (model) => {
+export const addMakeModel = async (model) => {
   try {
-    const existingModels = getModels();
-
-    // Check if model already exists for this brand
-    const exists = existingModels.some(
-      (existing) =>
-        existing.name.toLowerCase() === model.name.toLowerCase() &&
-        existing.brandId === model.brandId
-    );
-
-    if (exists) {
-      throw new Error("Model already exists for this brand");
-    }
-
-    const updatedModels = [...existingModels, model];
-    saveToStorage(STORAGE_KEYS.MODELS, updatedModels);
-
-    return updatedModels;
+    const res = await fetch("/api/models", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(model),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to add model");
+    return data;
   } catch (error) {
     console.error("Error adding model:", error);
     throw error;
   }
-};
-
-/**
- * Update an existing model in localStorage
- * @param {string} modelId - Model ID
- * @param {Object} updates - Updates to apply
- * @returns {Array} - Updated models array
- */
-export const updateModel = (modelId, updates) => {
-  try {
-    const existingModels = getModels();
-    const modelIndex = existingModels.findIndex(
-      (model) => model.id === modelId
-    );
-
-    if (modelIndex === -1) {
-      throw new Error("Model not found");
-    }
-
-    const updatedModels = [...existingModels];
-    updatedModels[modelIndex] = {
-      ...updatedModels[modelIndex],
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-
-    saveToStorage(STORAGE_KEYS.MODELS, updatedModels);
-
-    return updatedModels;
-  } catch (error) {
-    console.error("Error updating model:", error);
-    throw error;
-  }
-};
-
-/**
- * Delete a model from localStorage
- * @param {string} modelId - Model ID
- * @returns {Array} - Updated models array
- */
-export const deleteModel = (modelId) => {
-  try {
-    const existingModels = getModels();
-    const updatedModels = existingModels.filter(
-      (model) => model.id !== modelId
-    );
-
-    saveToStorage(STORAGE_KEYS.MODELS, updatedModels);
-
-    return updatedModels;
-  } catch (error) {
-    console.error("Error deleting model:", error);
-    throw error;
-  }
-};
-
-// ===== UTILITY FUNCTIONS =====
-
-/**
- * Download brands as JSON file
- */
-export const downloadBrands = () => {
-  const brands = getBrands();
-  const timestamp = new Date().toISOString().split("T")[0];
-  downloadAsJSON(brands, `brands_${timestamp}.json`);
-};
-
-/**
- * Download models as JSON file
- */
-export const downloadModels = () => {
-  const models = getModels();
-  const timestamp = new Date().toISOString().split("T")[0];
-  downloadAsJSON(models, `models_${timestamp}.json`);
-};
-
-/**
- * Download all data as combined JSON file
- */
-export const downloadAllData = () => {
-  const brands = getBrands();
-  const models = getModels();
-  const allData = {
-    brands,
-    models,
-    exportedAt: new Date().toISOString(),
-  };
-
-  const timestamp = new Date().toISOString().split("T")[0];
-  downloadAsJSON(allData, `powersports_data_${timestamp}.json`);
-};
-
-/**
- * Clear all data (use with caution)
- */
-export const clearAllData = () => {
-  if (typeof window === "undefined") return;
-
-  localStorage.removeItem(STORAGE_KEYS.BRANDS);
-  localStorage.removeItem(STORAGE_KEYS.MODELS);
-};
-
-/**
- * Get statistics
- * @returns {Object} - Statistics object
- */
-export const getStatistics = () => {
-  const brands = getBrands();
-  const models = getModels();
-
-  const modelsByBrand = {};
-  brands.forEach((brand) => {
-    modelsByBrand[brand.name] = models.filter(
-      (model) => model.brandId === brand.id
-    ).length;
-  });
-
-  return {
-    totalBrands: brands.length,
-    totalModels: models.length,
-    modelsByBrand,
-    lastUpdated: new Date().toISOString(),
-  };
 };
